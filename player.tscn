@@ -5,6 +5,9 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
 size = Vector2(12, 12)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fqxyq"]
+size = Vector2(16, 16)
+
 [node name="Player" type="CharacterBody2D" unique_id=1996058903]
 script = ExtResource("1_4flbx")
 
@@ -20,3 +23,15 @@ color = Color(1, 0, 0, 1)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=672751898]
 position_smoothing_enabled = true
+
+[node name="HitBox" type="Area2D" parent="." unique_id=235776242]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox" unique_id=148646269]
+shape = SubResource("RectangleShape2D_fqxyq")
+
+[node name="Slash" type="ColorRect" parent="HitBox" unique_id=583038734]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+color = Color(1, 1, 1, 0.42352942)
