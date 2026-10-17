@@ -4,14 +4,22 @@ extends CharacterBody2D
 @export var attack_damage := 1
 @export var attack_time := 0.15
 @export var attack_cooldown := 0.35
+@export var max_hp := 5
+@export var iframes := 1.0
 
+var hp := 0
 var facing := Vector2.RIGHT
 var can_attack := true
+var invincible := false
 
 @onready var hitbox: Area2D = $HitBox
 @onready var slash: ColorRect = $HitBox/Slash
+@onready var hp_label: Label = $HUD/HPLabel
 
 func _ready():
+	add_to_group("player")
+	hp = max_hp
+	update_hp()
 	hitbox.monitoring = false
 	slash.visible = false
 	hitbox.body_entered.connect(_on_hit)
@@ -38,5 +46,24 @@ func attack():
 	can_attack = true
 
 func _on_hit(body):
+	if body == self:
+		return
 	if body.has_method("take_damage"):
 		body.take_damage(attack_damage)
+
+func update_hp():
+	hp_label.text = "HP: %d" % hp
+
+func take_damage(amount):
+	if invincible:
+		return
+	hp -= amount
+	update_hp()
+	if hp <= 0:
+		get_tree().reload_current_scene()
+		return
+	invincible = true
+	modulate.a = 0.4
+	await get_tree().create_timer(iframes).timeout
+	modulate.a = 1.0
+	invincible = false
