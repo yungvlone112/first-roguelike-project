@@ -68,12 +68,13 @@ func fire_ring():
 		p.global_position = global_position
 
 func take_damage(amount):
-	Sfx.play("hit")
+	Sfx.hit()
 	hp -= amount
 	$BarFill.size.x = 32.0 * max(hp, 0) / max_hp
 	modulate.a = 0.3
 	await get_tree().create_timer(0.08).timeout
 	modulate.a = 1.0
 	if hp <= 0:
+		Fx.burst(global_position, Color(0.91, 0.86, 0.75), 40)
 		died.emit()
 		queue_free()

@@ -43,6 +43,12 @@ func _physics_process(_delta):
 			$Sprite2D.flip_h = dir.x < 0
 	velocity = dir * speed
 	move_and_slide()
+	var spr = get_node_or_null("Sprite2D")
+	if spr:
+		if dir != Vector2.ZERO:
+			spr.position.y = -absf(sin(Time.get_ticks_msec() / 90.0)) * 2.0
+		else:
+			spr.position.y = 0.0
 	if Input.is_action_just_pressed("swap") and swap_ready:
 		swap_weapon()
 	if Input.is_action_just_pressed("attack") and can_attack:
@@ -112,6 +118,7 @@ func take_damage(amount):
 	hp -= amount
 	update_hp()
 	Sfx.play("hurt")
+	shake(3.0)
 	if hp <= 0:
 		dead = true
 		get_tree().call_deferred("change_scene_to_file", "res://scenes/shop.tscn")
@@ -121,3 +128,9 @@ func take_damage(amount):
 	await get_tree().create_timer(iframes).timeout
 	modulate.a = 1.0
 	invincible = false
+func shake(amount):
+	var cam: Camera2D = $Camera2D
+	var tw := create_tween()
+	for i in 5:
+		tw.tween_property(cam, "offset", Vector2(randf_range(-amount, amount), randf_range(-amount, amount)), 0.03)
+	tw.tween_property(cam, "offset", Vector2.ZERO, 0.04)

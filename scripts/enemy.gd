@@ -22,11 +22,12 @@ func _physics_process(_delta):
 			c.take_damage(1)
 
 func take_damage(amount):
-	Sfx.play("hit")
+	Sfx.hit()
 	hp -= amount
 	modulate.a = 0.3
 	await get_tree().create_timer(0.08).timeout
 	modulate.a = 1.0
 	if hp <= 0:
+		Fx.burst(global_position, Color(0.8, 0.85, 1.0))
 		died.emit()
 		queue_free()
