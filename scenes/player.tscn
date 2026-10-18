@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bdwbbkhbempvt"]
 
 [ext_resource type="Script" uid="uid://buh1h8ieajpuh" path="res://scripts/player.gd" id="1_4flbx"]
+[ext_resource type="Script" uid="uid://hpe4n1dp116s" path="res://scripts/light.gd" id="2_g2els"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
 size = Vector2(12, 12)
@@ -54,3 +55,7 @@ offset_left = 4.0
 offset_top = 28.0
 offset_right = 44.0
 offset_bottom = 51.0
+
+[node name="Light" type="PointLight2D" parent="." unique_id=316342785]
+script = ExtResource("2_g2els")
+light_radius = 80.0
