@@ -3,6 +3,7 @@ extends Node2D
 signal exited
 
 const ENEMY = preload("res://scenes/enemy.tscn")
+const SHOOTER = preload("res://scenes/shooter.tscn")
 
 var enemy_count := 2
 var alive := 0
@@ -15,7 +16,10 @@ var exiting := false
 
 func _ready():
 	for i in enemy_count:
-		var e = ENEMY.instantiate()
+		var scene = ENEMY
+		if i % 3 == 2:
+			scene = SHOOTER
+		var e = scene.instantiate()
 		e.position = Vector2(randf_range(150, 420), randf_range(50, 220))
 		$Enemies.add_child(e)
 	door.unlock()
