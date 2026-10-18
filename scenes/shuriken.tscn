@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://db8p552phhqe5"]
+
+[ext_resource type="Script" uid="uid://cwjq0rkcuhryn" path="res://scripts/shuriken.gd" id="1_7ccba"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hf7dp"]
+radius = 3.0
+
+[node name="Shuriken" type="Area2D" unique_id=2136838530]
+script = ExtResource("1_7ccba")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1817900611]
+shape = SubResource("CircleShape2D_hf7dp")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=509970198]
+offset_left = -3.0
+offset_top = -3.0
+offset_right = 3.0
+offset_bottom = 3.0
+color = Color(0.7490196, 0.9098039, 1, 1)
