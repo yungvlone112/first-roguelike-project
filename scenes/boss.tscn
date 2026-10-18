@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://dgl4f81tp1812"]
+
+[ext_resource type="Script" uid="uid://dyq7kawdx570b" path="res://scripts/boss.gd" id="1_dlmty"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
+size = Vector2(28, 28)
+
+[node name="Boss" type="CharacterBody2D" unique_id=2027964455]
+script = ExtResource("1_dlmty")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=911972841]
+shape = SubResource("RectangleShape2D_hf7dp")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=239319456]
+offset_left = -14.0
+offset_top = -14.0
+offset_right = 14.0
+offset_bottom = 14.0
+color = Color(0.9098039, 0.8627451, 0.7529412, 1)
+
+[node name="BarBack" type="ColorRect" parent="." unique_id=812315812]
+offset_left = -16.0
+offset_top = -24.0
+offset_right = 16.0
+offset_bottom = -20.0
+color = Color(0.31526396, 0.13496906, 0.11108961, 1)
+
+[node name="BarFill" type="ColorRect" parent="." unique_id=303678577]
+offset_left = -16.0
+offset_top = -24.0
+offset_right = 16.0
+offset_bottom = -20.0
+color = Color(0.68932724, 0.074372835, 0, 1)
