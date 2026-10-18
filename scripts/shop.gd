@@ -4,6 +4,7 @@ var info: Label
 var buttons := {}
 
 func _ready():
+	Sfx.start_ambient()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var bg := ColorRect.new()
 	bg.color = Color(0.1, 0.08, 0.18)

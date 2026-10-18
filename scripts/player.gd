@@ -60,6 +60,7 @@ func swap_weapon():
 
 func throw_shuriken():
 	can_attack = false
+	Sfx.play("throw")
 	var s = SHURIKEN.instantiate()
 	s.velocity = facing * shuriken_speed
 	s.damage = attack_damage
@@ -70,6 +71,7 @@ func throw_shuriken():
 
 func attack():
 	can_attack = false
+	Sfx.play("swing")
 	hitbox.position = facing * 14
 	hitbox.rotation = facing.angle()
 	hitbox.set_deferred("monitoring", true)
@@ -91,6 +93,7 @@ func update_hp():
 	hp_label.text = "HP: %d/%d   Урон: %d   Оружие: %s" % [hp, max_hp, attack_damage, w]
 
 func apply_item(kind):
+	Sfx.play("pickup")
 	match kind:
 		"heal":
 			hp = min(hp + 2, max_hp)
@@ -108,6 +111,7 @@ func take_damage(amount):
 		return
 	hp -= amount
 	update_hp()
+	Sfx.play("hurt")
 	if hp <= 0:
 		dead = true
 		get_tree().call_deferred("change_scene_to_file", "res://scenes/shop.tscn")

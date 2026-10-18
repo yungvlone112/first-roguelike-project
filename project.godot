@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 [autoload]
 
 Meta="*uid://bnpikh0g7rlyc"
+Sfx="*uid://cmop0xq1shf15"
 
 [display]
 

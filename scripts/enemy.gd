@@ -22,6 +22,7 @@ func _physics_process(_delta):
 			c.take_damage(1)
 
 func take_damage(amount):
+	Sfx.play("hit")
 	hp -= amount
 	modulate.a = 0.3
 	await get_tree().create_timer(0.08).timeout

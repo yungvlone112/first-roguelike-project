@@ -68,6 +68,7 @@ func fire_ring():
 		p.global_position = global_position
 
 func take_damage(amount):
+	Sfx.play("hit")
 	hp -= amount
 	$BarFill.size.x = 32.0 * max(hp, 0) / max_hp
 	modulate.a = 0.3

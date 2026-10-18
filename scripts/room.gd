@@ -45,6 +45,7 @@ func _on_enter(body):
 	started = true
 	if alive > 0:
 		door.lock()
+		Sfx.play("door")
 		for e in $Enemies.get_children():
 			e.active = true
 
@@ -61,6 +62,7 @@ func _on_enemy_died():
 	alive -= 1
 	if alive <= 0:
 		door.unlock()
+		Sfx.play("door")
 		drop_rewards.call_deferred()
 
 func drop_rewards():
