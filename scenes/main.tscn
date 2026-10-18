@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://cal0kpvcj82mj"]
+
+[ext_resource type="Script" uid="uid://cfom7njoo0i5p" path="res://scripts/main.gd" id="1_0wfyh"]
+[ext_resource type="PackedScene" uid="uid://bdwbbkhbempvt" path="res://scenes/player.tscn" id="2_0xm2m"]
+
+[node name="Node2D" type="Node2D" unique_id=779837057]
+script = ExtResource("1_0wfyh")
+
+[node name="Player" parent="." unique_id=1996058903 instance=ExtResource("2_0xm2m")]
+position = Vector2(40, 135)
+speed = 190.0

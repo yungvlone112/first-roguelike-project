@@ -7,6 +7,7 @@ size = Vector2(12, 12)
 
 [node name="Enemy" type="CharacterBody2D" unique_id=1231709651]
 script = ExtResource("1_7p1mj")
+speed = 80.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1246365021]
 shape = SubResource("RectangleShape2D_hf7dp")

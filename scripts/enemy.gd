@@ -1,15 +1,19 @@
 extends CharacterBody2D
 
+signal died
+
 @export var speed := 40.0
 var hp := 3
+var active := false
 var player: Node2D
 
-func _ready():
-	player = get_tree().get_first_node_in_group("player")
-
 func _physics_process(_delta):
-	if player == null:
+	if not active:
 		return
+	if player == null:
+		player = get_tree().get_first_node_in_group("player")
+		if player == null:
+			return
 	velocity = (player.global_position - global_position).normalized() * speed
 	move_and_slide()
 	for i in get_slide_collision_count():
@@ -23,4 +27,5 @@ func take_damage(amount):
 	await get_tree().create_timer(0.08).timeout
 	modulate.a = 1.0
 	if hp <= 0:
+		died.emit()
 		queue_free()
