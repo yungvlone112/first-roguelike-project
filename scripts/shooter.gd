@@ -14,10 +14,6 @@ var active := false
 var player: Node2D
 var timer := 1.0
 var shooting := false
-var base_color: Color
-
-func _ready():
-	base_color = $ColorRect.color
 
 func _physics_process(delta):
 	if not active:
@@ -41,9 +37,9 @@ func _physics_process(delta):
 
 func shoot():
 	shooting = true
-	$ColorRect.color = Color.WHITE
+	$Sprite2D.modulate = Color(2.5, 2.5, 2.5)
 	await get_tree().create_timer(telegraph).timeout
-	$ColorRect.color = base_color
+	$Sprite2D.modulate = Color.WHITE
 	var p = PROJECTILE.instantiate()
 	p.velocity = (player.global_position - global_position).normalized() * bullet_speed
 	get_parent().get_parent().add_child(p)

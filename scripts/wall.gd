@@ -7,8 +7,8 @@ func _ready():
 	shape.size = size
 	$CollisionShape2D.shape = shape
 	$CollisionShape2D.position = size / 2
-	$ColorRect.size = size
-	$ColorRect.position = Vector2.ZERO
+	$Visual.size = size
+	$Visual.position = Vector2.ZERO
 
 func lock():
 	visible = true

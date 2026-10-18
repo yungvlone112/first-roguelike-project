@@ -39,6 +39,8 @@ func _physics_process(_delta):
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if dir != Vector2.ZERO:
 		facing = dir.normalized()
+		if dir.x != 0:
+			$Sprite2D.flip_h = dir.x < 0
 	velocity = dir * speed
 	move_and_slide()
 	if Input.is_action_just_pressed("swap") and swap_ready:

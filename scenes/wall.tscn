@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cs24vwrgnfejb"]
 
 [ext_resource type="Script" uid="uid://ctwe0i6kwp4sn" path="res://scripts/wall.gd" id="1_wykyb"]
+[ext_resource type="Texture2D" uid="uid://bopf08518i16y" path="res://art/wall.png" id="2_2ktk7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
 size = Vector2(16, 16)
@@ -12,7 +13,9 @@ script = ExtResource("1_wykyb")
 position = Vector2(8, 8)
 shape = SubResource("RectangleShape2D_hf7dp")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=137922851]
-offset_right = 16.0
-offset_bottom = 16.0
-color = Color(0.33213586, 0.3321359, 0.3321359, 1)
+[node name="Visual" type="TextureRect" parent="." unique_id=245857408]
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("2_2ktk7")
+expand_mode = 1
+stretch_mode = 1

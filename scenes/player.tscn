@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://buh1h8ieajpuh" path="res://scripts/player.gd" id="1_4flbx"]
 [ext_resource type="Script" uid="uid://hpe4n1dp116s" path="res://scripts/light.gd" id="2_g2els"]
+[ext_resource type="Texture2D" uid="uid://bdkpappft01yh" path="res://art/hero.png" id="3_qhqgy"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
 size = Vector2(12, 12)
@@ -14,13 +15,6 @@ script = ExtResource("1_4flbx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=817904267]
 shape = SubResource("RectangleShape2D_hf7dp")
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=262687208]
-offset_left = -6.0
-offset_top = -6.0
-offset_right = 6.0
-offset_bottom = 6.0
-color = Color(1, 0, 0, 1)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=672751898]
 limit_left = 0
@@ -59,3 +53,6 @@ offset_bottom = 51.0
 [node name="Light" type="PointLight2D" parent="." unique_id=316342785]
 script = ExtResource("2_g2els")
 light_radius = 80.0
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1894845110]
+texture = ExtResource("3_qhqgy")

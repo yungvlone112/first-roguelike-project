@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d10j0k7xk5qwu" path="res://scripts/room.gd" id="1_85yof"]
 [ext_resource type="PackedScene" uid="uid://cs24vwrgnfejb" path="res://scenes/wall.tscn" id="2_14vil"]
+[ext_resource type="Texture2D" uid="uid://cl7qsg2xk67wj" path="res://art/floor.png" id="2_85yof"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
 size = Vector2(300, 180)
@@ -12,10 +13,12 @@ size = Vector2(8, 48)
 [node name="Room" type="Node2D" unique_id=1549232903]
 script = ExtResource("1_85yof")
 
-[node name="Floor" type="ColorRect" parent="." unique_id=711282236]
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1316864592]
 offset_right = 480.0
 offset_bottom = 270.0
-color = Color(0.19793725, 0.19793722, 0.19793722, 1)
+texture = ExtResource("2_85yof")
+expand_mode = 1
+stretch_mode = 1
 
 [node name="WallTop" parent="." unique_id=133484559 instance=ExtResource("2_14vil")]
 size = Vector2(480, 16)

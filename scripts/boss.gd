@@ -18,7 +18,6 @@ var base_color: Color
 
 func _ready():
 	hp = max_hp
-	base_color = $ColorRect.color
 
 func _physics_process(delta):
 	if not active:
@@ -34,14 +33,14 @@ func _physics_process(delta):
 			if state_time <= 0:
 				state = "telegraph"
 				state_time = 0.7
-				$ColorRect.color = Color(1.0, 0.3, 0.2)
+				$Sprite2D.modulate = Color(1.0, 0.35, 0.3)
 		"telegraph":
 			velocity = Vector2.ZERO
 			if state_time <= 0:
 				dash_dir = (player.global_position - global_position).normalized()
 				state = "dash"
 				state_time = 0.45
-				$ColorRect.color = base_color
+				$Sprite2D.modulate = Color.WHITE
 		"dash":
 			velocity = dash_dir * dash_speed
 			if state_time <= 0:
