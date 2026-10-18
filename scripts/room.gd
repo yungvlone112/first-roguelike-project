@@ -2,14 +2,22 @@ extends Node2D
 
 signal exited
 
+const ENEMY = preload("res://scenes/enemy.tscn")
+
+var enemy_count := 2
 var alive := 0
 var started := false
+var exiting := false
 
 @onready var door = $Door
 @onready var trigger: Area2D = $Trigger
 @onready var exit_zone: Area2D = $Exit
 
 func _ready():
+	for i in enemy_count:
+		var e = ENEMY.instantiate()
+		e.position = Vector2(randf_range(150, 420), randf_range(50, 220))
+		$Enemies.add_child(e)
 	door.unlock()
 	for e in $Enemies.get_children():
 		alive += 1
@@ -27,8 +35,12 @@ func _on_enter(body):
 			e.active = true
 
 func _on_exit(body):
-	if body.is_in_group("player"):
-		exited.emit()
+	if exiting or not body.is_in_group("player"):
+		return
+	if body.global_position.x < 400:
+		return
+	exiting = true
+	exited.emit()
 
 func _on_enemy_died():
 	alive -= 1

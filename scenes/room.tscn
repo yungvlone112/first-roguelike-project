@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://d10j0k7xk5qwu" path="res://scripts/room.gd" id="1_85yof"]
 [ext_resource type="PackedScene" uid="uid://cs24vwrgnfejb" path="res://scenes/wall.tscn" id="2_14vil"]
-[ext_resource type="PackedScene" uid="uid://oyjy64bimjx6" path="res://scenes/enemy.tscn" id="3_jxe34"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
 size = Vector2(300, 180)
@@ -54,9 +53,3 @@ position = Vector2(474, 140)
 shape = SubResource("RectangleShape2D_fqxyq")
 
 [node name="Enemies" type="Node2D" parent="." unique_id=811026082]
-
-[node name="Enemy" parent="Enemies" unique_id=1231709651 instance=ExtResource("3_jxe34")]
-position = Vector2(380, 70)
-
-[node name="Enemy2" parent="Enemies" unique_id=1851190659 instance=ExtResource("3_jxe34")]
-position = Vector2(380, 200)

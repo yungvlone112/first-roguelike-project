@@ -7,6 +7,7 @@ extends CharacterBody2D
 @export var max_hp := 5
 @export var iframes := 1.0
 
+var dead := false
 var hp := 0
 var facing := Vector2.RIGHT
 var can_attack := true
@@ -55,12 +56,13 @@ func update_hp():
 	hp_label.text = "HP: %d" % hp
 
 func take_damage(amount):
-	if invincible:
+	if invincible or dead:
 		return
 	hp -= amount
 	update_hp()
 	if hp <= 0:
-		get_tree().reload_current_scene()
+		dead = true
+		get_tree().call_deferred("reload_current_scene")
 		return
 	invincible = true
 	modulate.a = 0.4
