@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="first roguelike project"
-run/main_scene="uid://cal0kpvcj82mj"
+run/main_scene="uid://cfk5rqbuv24rf"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Meta="*uid://bnpikh0g7rlyc"
 
 [display]
 

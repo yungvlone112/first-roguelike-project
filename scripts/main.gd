@@ -31,7 +31,8 @@ func load_room():
 	if room_idx == 0:
 		current.enemy_count = 1
 	elif room_idx == rooms_in_floor - 1:
-		current.enemy_count = 5 + floor_num
+		current.is_boss = true
+		current.boss_hp = 8 + 4 * floor_num
 	else:
 		current.enemy_count = randi_range(2, 3 + floor_num)
 	player.global_position = Vector2(40, 135)

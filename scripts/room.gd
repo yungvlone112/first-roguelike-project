@@ -5,6 +5,7 @@ signal exited
 const ENEMY = preload("res://scenes/enemy.tscn")
 const SHOOTER = preload("res://scenes/shooter.tscn")
 const BOSS = preload("res://scenes/boss.tscn")
+const PICKUP = preload("res://scenes/pickup.tscn")
 
 var enemy_count := 2
 var is_boss := false
@@ -56,6 +57,22 @@ func _on_exit(body):
 	exited.emit()
 
 func _on_enemy_died():
+	Meta.add_souls(1)
 	alive -= 1
 	if alive <= 0:
 		door.unlock()
+		drop_rewards.call_deferred()
+
+func drop_rewards():
+	if is_boss:
+		Meta.add_souls(10)
+		spawn_pickup("heal", Vector2(215, 135))
+		spawn_pickup(["damage", "speed", "maxhp"].pick_random(), Vector2(265, 135))
+	elif randf() < 0.3:
+		spawn_pickup("heal", Vector2(240, 135))
+
+func spawn_pickup(kind, pos):
+	var p = PICKUP.instantiate()
+	p.kind = kind
+	p.position = pos
+	add_child(p)

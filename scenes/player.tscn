@@ -29,12 +29,12 @@ limit_bottom = 270
 limit_smoothed = true
 position_smoothing_enabled = true
 
-[node name="HitBox" type="Area2D" parent="." unique_id=235776242]
+[node name="Hitbox" type="Area2D" parent="." unique_id=235776242]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox" unique_id=148646269]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=148646269]
 shape = SubResource("RectangleShape2D_fqxyq")
 
-[node name="Slash" type="ColorRect" parent="HitBox" unique_id=583038734]
+[node name="Slash" type="ColorRect" parent="Hitbox" unique_id=583038734]
 offset_left = -8.0
 offset_top = -8.0
 offset_right = 8.0

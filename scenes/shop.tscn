@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://cfk5rqbuv24rf"]
+
+[ext_resource type="Script" uid="uid://bdbyrpx167va2" path="res://scripts/shop.gd" id="1_lx5au"]
+
+[node name="Shop" type="Control" unique_id=1825550824]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_lx5au")

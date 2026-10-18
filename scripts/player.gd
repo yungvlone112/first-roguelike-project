@@ -7,14 +7,14 @@ extends CharacterBody2D
 @export var max_hp := 5
 @export var iframes := 1.0
 
-var dead := false
 var hp := 0
 var facing := Vector2.RIGHT
 var can_attack := true
 var invincible := false
+var dead := false
 
-@onready var hitbox: Area2D = $HitBox
-@onready var slash: ColorRect = $HitBox/Slash
+@onready var hitbox: Area2D = $Hitbox
+@onready var slash: ColorRect = $Hitbox/Slash
 @onready var hp_label: Label = $HUD/HPLabel
 
 func _ready():
@@ -53,7 +53,20 @@ func _on_hit(body):
 		body.take_damage(attack_damage)
 
 func update_hp():
-	hp_label.text = "HP: %d" % hp
+	hp_label.text = "HP: %d/%d   Урон: %d" % [hp, max_hp, attack_damage]
+
+func apply_item(kind):
+	match kind:
+		"heal":
+			hp = min(hp + 2, max_hp)
+		"damage":
+			attack_damage += 1
+		"speed":
+			speed += 15.0
+		"maxhp":
+			max_hp += 1
+			hp += 1
+	update_hp()
 
 func take_damage(amount):
 	if invincible or dead:
@@ -62,7 +75,7 @@ func take_damage(amount):
 	update_hp()
 	if hp <= 0:
 		dead = true
-		get_tree().call_deferred("reload_current_scene")
+		get_tree().call_deferred("change_scene_to_file", "res://scenes/shop.tscn")
 		return
 	invincible = true
 	modulate.a = 0.4
