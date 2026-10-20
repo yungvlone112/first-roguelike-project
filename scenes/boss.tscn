@@ -1,15 +1,16 @@
 [gd_scene format=3 uid="uid://dgl4f81tp1812"]
 
 [ext_resource type="Script" uid="uid://dyq7kawdx570b" path="res://scripts/boss.gd" id="1_dlmty"]
-[ext_resource type="Texture2D" uid="uid://cvl2wdwh1lsxx" path="res://art/boss.png" id="2_neq0i"]
+[ext_resource type="Texture2D" uid="uid://bfbnplirmflij" path="res://art/boss.png" id="2_neq0i"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
-size = Vector2(28, 28)
+size = Vector2(22, 50)
 
 [node name="Boss" type="CharacterBody2D" unique_id=2027964455]
 script = ExtResource("1_dlmty")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=911972841]
+position = Vector2(0, 2)
 shape = SubResource("RectangleShape2D_hf7dp")
 
 [node name="BarBack" type="ColorRect" parent="." unique_id=812315812]

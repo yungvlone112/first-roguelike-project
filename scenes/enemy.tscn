@@ -1,16 +1,17 @@
 [gd_scene format=3 uid="uid://oyjy64bimjx6"]
 
 [ext_resource type="Script" uid="uid://dkqq7e8g0d0hd" path="res://scripts/enemy.gd" id="1_7p1mj"]
-[ext_resource type="Texture2D" uid="uid://bdu423qhk4oss" path="res://art/yurei.png" id="2_md0e3"]
+[ext_resource type="Texture2D" uid="uid://duqxj5hlx2jik" path="res://art/yurei.png" id="2_md0e3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
-size = Vector2(12, 12)
+size = Vector2(16, 42)
 
 [node name="Enemy" type="CharacterBody2D" unique_id=1231709651]
 script = ExtResource("1_7p1mj")
 speed = 50.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1246365021]
+position = Vector2(0, 5)
 shape = SubResource("RectangleShape2D_hf7dp")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1502720361]

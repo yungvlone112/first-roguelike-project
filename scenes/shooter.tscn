@@ -1,15 +1,16 @@
 [gd_scene format=3 uid="uid://kdthgh8ult0o"]
 
 [ext_resource type="Script" uid="uid://e62wtiki1rer" path="res://scripts/shooter.gd" id="1_gt117"]
-[ext_resource type="Texture2D" uid="uid://rhenmenvb4xk" path="res://art/karakasa.png" id="2_1e8ai"]
+[ext_resource type="Texture2D" uid="uid://blsan70vkfi8o" path="res://art/karakasa.png" id="2_1e8ai"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
-size = Vector2(12, 12)
+size = Vector2(18, 46)
 
 [node name="Shooter" type="CharacterBody2D" unique_id=779396870]
 script = ExtResource("1_gt117")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=815030135]
+position = Vector2(0, 4)
 shape = SubResource("RectangleShape2D_hf7dp")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=659019938]

@@ -2,10 +2,10 @@
 
 [ext_resource type="Script" uid="uid://buh1h8ieajpuh" path="res://scripts/player.gd" id="1_4flbx"]
 [ext_resource type="Script" uid="uid://hpe4n1dp116s" path="res://scripts/light.gd" id="2_g2els"]
-[ext_resource type="Texture2D" uid="uid://bdkpappft01yh" path="res://art/hero.png" id="3_qhqgy"]
+[ext_resource type="Texture2D" uid="uid://jv6hif2mfcxd" path="res://art/hero.png" id="3_qhqgy"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
-size = Vector2(12, 12)
+size = Vector2(16, 44)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fqxyq"]
 size = Vector2(16, 16)
@@ -14,6 +14,7 @@ size = Vector2(16, 16)
 script = ExtResource("1_4flbx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=817904267]
+position = Vector2(0, 5)
 shape = SubResource("RectangleShape2D_hf7dp")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=672751898]
