@@ -15,6 +15,8 @@ var state := "chase"
 var state_time := 2.0
 var dash_dir := Vector2.ZERO
 var base_color: Color
+var dead := false
+var announced := false
 
 func _ready():
 	hp = max_hp
@@ -29,7 +31,7 @@ func _physics_process(delta):
 	state_time -= delta
 	match state:
 		"chase":
-			velocity = (player.global_position - global_position).normalized() * chase_speed
+			velocity = _chase_dir(player.global_position) * chase_speed
 			if state_time <= 0:
 				state = "telegraph"
 				state_time = 0.7
@@ -68,13 +70,25 @@ func fire_ring():
 		p.global_position = global_position
 
 func take_damage(amount):
+	if dead:
+		return
 	Sfx.hit()
 	hp -= amount
 	$BarFill.size.x = 32.0 * max(hp, 0) / max_hp
+	if hp <= 0:
+		dead = true
+		active = false
 	modulate.a = 0.3
 	await get_tree().create_timer(0.08).timeout
 	modulate.a = 1.0
-	if hp <= 0:
+	if dead and not announced:   # сигнал смерти отправляется ровно один раз
+		announced = true
 		Fx.burst(global_position, Color(0.91, 0.86, 0.75), 40)
 		died.emit()
 		queue_free()
+
+func _chase_dir(target: Vector2) -> Vector2:
+	var room = get_parent().get_parent()   # Enemies -> Room
+	if room != null and room.has_method("steer"):
+		return room.steer(global_position, target)
+	return (target - global_position).normalized()

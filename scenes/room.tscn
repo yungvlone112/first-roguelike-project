@@ -1,58 +1,6 @@
 [gd_scene format=3 uid="uid://db6he8w07dvew"]
 
 [ext_resource type="Script" uid="uid://d10j0k7xk5qwu" path="res://scripts/room.gd" id="1_85yof"]
-[ext_resource type="PackedScene" uid="uid://cs24vwrgnfejb" path="res://scenes/wall.tscn" id="2_14vil"]
-[ext_resource type="Texture2D" uid="uid://cl7qsg2xk67wj" path="res://art/floor.png" id="2_85yof"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_hf7dp"]
-size = Vector2(300, 180)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_fqxyq"]
-size = Vector2(8, 48)
-
-[node name="Room" type="Node2D" unique_id=1549232903]
+[node name="Room" type="Node2D"]
 script = ExtResource("1_85yof")
-
-[node name="TextureRect" type="TextureRect" parent="." unique_id=1316864592]
-offset_right = 480.0
-offset_bottom = 270.0
-texture = ExtResource("2_85yof")
-expand_mode = 1
-stretch_mode = 1
-
-[node name="WallTop" parent="." unique_id=133484559 instance=ExtResource("2_14vil")]
-size = Vector2(480, 16)
-
-[node name="WallBottom" parent="." unique_id=449389537 instance=ExtResource("2_14vil")]
-position = Vector2(0, 254)
-size = Vector2(480, 16)
-
-[node name="WallLeft" parent="." unique_id=285550372 instance=ExtResource("2_14vil")]
-position = Vector2(0, 16)
-size = Vector2(16, 238)
-
-[node name="WallRight" parent="." unique_id=1025569734 instance=ExtResource("2_14vil")]
-position = Vector2(464, 16)
-size = Vector2(16, 100)
-
-[node name="Door" parent="." unique_id=1049272702 instance=ExtResource("2_14vil")]
-position = Vector2(464, 116)
-size = Vector2(16, 48)
-
-[node name="WallRightBottom" parent="." unique_id=1220365632 instance=ExtResource("2_14vil")]
-position = Vector2(464, 164)
-size = Vector2(16, 90)
-
-[node name="Trigger" type="Area2D" parent="." unique_id=207323148]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Trigger" unique_id=1899867765]
-position = Vector2(240, 135)
-shape = SubResource("RectangleShape2D_hf7dp")
-
-[node name="Exit" type="Area2D" parent="." unique_id=1043751623]
-position = Vector2(474, 140)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Exit" unique_id=1707192212]
-shape = SubResource("RectangleShape2D_fqxyq")
-
-[node name="Enemies" type="Node2D" parent="." unique_id=811026082]
