@@ -15,6 +15,10 @@ const RoomLayout = preload("res://scripts/room_layout.gd")
 const RoomDressing = preload("res://scripts/room_dressing.gd")
 const RoomSpecial = preload("res://scripts/room_special.gd")
 const LIGHT = preload("res://scripts/light.gd")
+# Новые существа (скрипты, узлы собираются в _ready): см. mob.gd
+const NOPPERABO = preload("res://scripts/nopperabo.gd")
+const TEKEKE = preload("res://scripts/tekeke.gd")
+const ROKUROKUBI = preload("res://scripts/rokurokubi.gd")
 const DOOR_TEX = preload("res://art/tiles/door_sealed.png")
 const DOOR_BOSS_TEX = preload("res://art/tiles/door_boss.png")
 const PORTAL_TEX = preload("res://art/props/torii.png")
@@ -150,12 +154,37 @@ func _spawn_enemies(spawn: Vector2) -> void:
 		enemies.add_child(b)
 		return
 	for i in data.enemy_count:
-		var scene = ENEMY
-		if i % 3 == 2:
-			scene = SHOOTER
-		var e = scene.instantiate()
+		var e = _make_enemy(i)
 		e.position = dressing.random_enemy_point(spawn)
 		enemies.add_child(e)
+
+
+# Каждый третий враг — стрелок; остальные случайно из набора этажа
+func _make_enemy(i: int) -> Node2D:
+	if i % 3 == 2:
+		return SHOOTER.instantiate()
+	var pool: Array = [ENEMY, ENEMY, NOPPERABO, TEKEKE]
+	if floor_num >= 2:
+		pool.append_array([ROKUROKUBI, ROKUROKUBI])
+	if floor_num >= 3:
+		pool.append(NOPPERABO)
+	var pick = pool[randi() % pool.size()]
+	if pick is PackedScene:
+		return pick.instantiate()
+	return pick.new()
+
+
+# Враг, появившийся посреди комнаты (мимик из сундука): запирает двери до своей смерти
+func spawn_extra_enemy(e: Node2D) -> void:
+	enemies.add_child(e)
+	var id: int = e.get_instance_id()
+	pending[id] = true
+	e.died.connect(_on_enemy_died.bind(id))
+	e.active = true
+	data.cleared = false
+	started = true
+	_lock_doors()
+	Sfx.play("door")
 
 
 # ---------- Каждый физический кадр ----------

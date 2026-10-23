@@ -4,6 +4,11 @@ const ROOM = preload("res://scenes/room.tscn")
 const FloorGen = preload("res://scripts/floor_gen.gd")
 const RoomLayout = preload("res://scripts/room_layout.gd")
 const Minimap = preload("res://scripts/minimap.gd")
+const RoomDressing = preload("res://scripts/room_dressing.gd")
+const Atmosphere = preload("res://scripts/atmosphere.gd")
+
+# Тема по этажу: татами -> доски -> храм -> подвал -> снова по кругу
+const THEME_ORDER := ["tatami", "boards", "temple", "cellar"]
 
 var floor_num := 1
 var rooms := {}               # Vector2i (клетка на карте этажа) -> RoomData
@@ -15,6 +20,9 @@ var dark: CanvasModulate
 var fade: ColorRect
 var minimap: Control
 var transition_time := 0.0
+var atmosphere: CanvasLayer
+var tension := 0.0                 # 0..1: насколько близко враг (виньетка, свет героя)
+var whisper_timer := 20.0
 
 @onready var player = $Player
 @onready var info: Label = $Player/HUD/InfoLabel
@@ -28,6 +36,8 @@ func _ready():
 	start_floor()
 
 func _make_overlay():
+	atmosphere = Atmosphere.new()
+	add_child(atmosphere)
 	var map_layer := CanvasLayer.new()
 	map_layer.layer = 5
 	add_child(map_layer)
@@ -78,6 +88,10 @@ func enter_room(c: Vector2i, entry_side: int):
 	current.floor_num = floor_num
 	current.boss_hp = 8 + 4 * floor_num
 	current.boss_side = -1
+	current.theme = THEME_ORDER[(floor_num - 1) % THEME_ORDER.size()]
+	var surface_theme: String = "hall" if data.kind == "hall" else current.theme
+	Sfx.surface = RoomDressing.THEMES[surface_theme]["surface"]
+	whisper_timer = randf_range(5.0, 10.0) if data.kind == "hall" else randf_range(15.0, 30.0)
 	for side in 4:   # если за одной из дверей комната босса, помечаем её как опасную
 		if data.doors[side] and rooms[c + FloorGen.DIR[side]].kind == "boss":
 			current.boss_side = side
@@ -92,6 +106,8 @@ func enter_room(c: Vector2i, entry_side: int):
 	current.descend.connect(_on_descend)
 	info.text = "Этаж %d" % floor_num
 	minimap.refresh(rooms, cell)
+	if data.anomaly != "":
+		Sfx.whisper(player.global_position + Vector2(60, -40), -10.0)   # комната «не такая»
 
 func _on_room_exited(side: int):
 	if transitioning:
@@ -120,6 +136,8 @@ func _end_transition():
 
 # Страховка: если переход почему-то завис, разблокируем игрока
 func _process(delta):
+	_update_tension(delta)
+	_update_whispers(delta)
 	if not transitioning:
 		return
 	transition_time += delta
@@ -127,6 +145,34 @@ func _process(delta):
 		push_warning("Переход завис, сбрасываю")
 		fade.color.a = 0.0
 		_end_transition()
+
+# Напряжение: чем ближе живой враг, тем гуще виньетка и тем сильнее дрожит и сжимается свет героя
+func _update_tension(delta: float) -> void:
+	var target := 0.0
+	if current != null and is_instance_valid(current) and current.get("enemies") != null:
+		var nearest := 1000.0
+		for e in current.enemies.get_children():
+			if e.get("active") == true:
+				nearest = minf(nearest, e.global_position.distance_to(player.global_position))
+		target = clampf(1.0 - (nearest - 40.0) / 150.0, 0.0, 1.0)
+	tension = lerpf(tension, target, minf(1.0, delta * 3.0))
+	atmosphere.set_tension(tension)
+	var light = player.get_node_or_null("Light")
+	if light != null:
+		light.set("tension", tension)
+
+
+# Шёпот где-то рядом: редко, а в коридорах чаще
+func _update_whispers(delta: float) -> void:
+	if transitioning or current == null:
+		return
+	whisper_timer -= delta
+	if whisper_timer > 0.0:
+		return
+	var hall: bool = current.data != null and current.data.kind == "hall"
+	whisper_timer = randf_range(5.0, 12.0) if hall else randf_range(18.0, 40.0)
+	Sfx.whisper(player.global_position + Vector2.from_angle(randf() * TAU) * randf_range(90.0, 180.0))
+
 
 func _on_descend():
 	if transitioning:

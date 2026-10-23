@@ -9,6 +9,12 @@ const GRID := Vector2i(6, 4)
 const CORNER_SIDES := [[0, 3], [0, 1], [2, 3], [2, 1]]
 # Особые комнаты (по одной на этаж); порядок важен: сюжетная занимает самый дальний тупик
 const SPECIAL_KINDS := ["story", "shop", "chest"]
+# «Аномалии»: обычная пустая комната, в которой одна деталь не на месте. Безопасны, редки.
+const ANOMALIES := ["extra_door", "stare_kokeshi", "blue_candles", "handprints"]
+const ANOMALY_CHANCE := 0.12
+const ANOMALY_MAX := 2
+# Коридор (kind "hall"): узкая пустая комната из одинаковых фусума, только двери W/E
+const HALL_CHANCE := 0.18
 
 
 class RoomData:
@@ -20,6 +26,7 @@ class RoomData:
 	var enemy_count := 0
 	var visited := false
 	var cleared := false
+	var anomaly := ""                           # "" или один из ANOMALIES
 	var state := {}                             # состояние особых комнат (куплено, открыто и т.д.)
 
 
@@ -103,7 +110,25 @@ static func _try_generate(floor_num: int, rng: RandomNumberGenerator, with_speci
 		if r.kind == "normal":
 			r.enemy_count = rng.randi_range(3, 4 + floor_num)   # комната больше — врагов чуть больше
 		_assign_shape(r, rng)
+	_assign_anomalies(rooms, rng)
 	return rooms
+
+
+# Редкие безопасные комнаты-«аномалии» среди обычных (враги убираются, комната сразу зачищена)
+static func _assign_anomalies(rooms: Dictionary, rng: RandomNumberGenerator) -> void:
+	var made := 0
+	for c in rooms:
+		var r = rooms[c]
+		if made >= ANOMALY_MAX:
+			return
+		if r.kind != "normal" or r.enemy_count == 0:
+			continue
+		if rng.randf() < ANOMALY_CHANCE:
+			r.anomaly = ANOMALIES[rng.randi_range(0, ANOMALIES.size() - 1)]
+			r.enemy_count = 0
+			r.cleared = true
+			r.cuts.clear()   # прямоугольная комната: декору аномалии нужно место
+			made += 1
 
 
 # Случайный самонепересекающийся путь из length клеток
@@ -211,6 +236,17 @@ static func _assign_shape(r, rng: RandomNumberGenerator) -> void:
 	r.cuts.clear()
 	if r.kind != "normal" and r.kind != "boss":
 		return   # старт и особые комнаты всегда прямоугольные (удобно рисовать свои)
+	# Коридор: только если двери лишь слева/справа, иначе вырезы отрезали бы север/юг
+	if r.kind == "normal" and not r.doors[0] and not r.doors[2] and (r.doors[1] or r.doors[3]) \
+			and rng.randf() < HALL_CHANCE:
+		r.cuts.append(Rect2i(1, RoomLayout.TOP, RoomLayout.COLS - 2, 9))
+		r.cuts.append(Rect2i(1, 17, RoomLayout.COLS - 2, RoomLayout.ROWS - 18))
+		if RoomLayout.new(r).check():
+			r.kind = "hall"
+			r.enemy_count = 0
+			r.cleared = true
+			return
+		r.cuts.clear()
 	var roll := rng.randf()
 	var shape := "rect"
 	if r.kind == "boss":

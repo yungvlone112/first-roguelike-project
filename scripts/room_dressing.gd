@@ -5,18 +5,25 @@ extends Node2D
 
 const RoomLayout = preload("res://scripts/room_layout.gd")
 const LIGHT = preload("res://scripts/light.gd")
+const MOON = preload("res://scripts/moon.gd")
+const KOKESHI = preload("res://scripts/kokeshi_doll.gd")
 
 const TILE := 16
 const OBSTACLE_GAP := 24.0   # минимальный просвет между препятствиями (герой 16 px в ширину)
 const ART := "res://art/"
 
 # --- Темы: какие тайлы и предметы встречаются (число = вес) ---
-# mats: пол из циновок татами (атлас tiles/tatami_atlas.png: 4x2 тайла на циновку, 2 варианта)
-# floor: запасной вариант — случайные тайлы целиком (если mats нет)
+# surface: звук шагов (tatami / boards / stone)
+# mat: пол из «циновок/плит» по атласу (w x h тайлов, 2 варианта стопкой), уложенных в разбежку
+# floor: запасной вариант — случайные тайлы целиком (если mat нет)
 # overlays: прозрачные накладки поверх пола ("" = без накладки)
+# wall: face — стена «лицом» к полу, post — столб (каждые 5 клеток), cap — крыша;
+#       pair — вместо face/post два чередующихся тайла (коридор из фусума)
 const THEMES := {
+	# Этаж 1: татами-комнаты старого дома
 	"tatami": {
-		"mats": true,
+		"surface": "tatami",
+		"mat": {"atlas": "tiles/tatami_atlas.png", "w": 4, "h": 2},
 		"overlays": {
 			"": 88.0,
 			"tiles/floor_scratch.png": 3.5,
@@ -25,6 +32,7 @@ const THEMES := {
 			"tiles/floor_mold.png": 1.5,
 			"tiles/floor_blood.png": 0.8,
 		},
+		"wall": {"face": "wall.png", "post": "tiles/wall_post.png", "cap": "tiles/wall_cap.png"},
 		"wall_decals": {
 			"tiles/wall_plaster.png": 4.0,
 			"tiles/wall_mold.png": 3.0,
@@ -37,19 +45,59 @@ const THEMES := {
 		"solid": {"pillar": 3.0, "table": 3.0, "screen": 3.0, "lantern": 2.0,
 			"rubble": 2.0, "well": 1.0},
 	},
-	# Заготовки особых комнат: только пол-татами, без декора и препятствий
-	"plain": {"mats": true},
-	# Пример второй темы для других этажей
+	# Этаж 2: деревянные галереи и дощатые полы
 	"boards": {
+		"surface": "boards",
 		"floor": {"tiles/floor_boards.png": 100.0},
 		"overlays": {"": 90.0, "tiles/floor_crack.png": 4.0, "tiles/floor_stain.png": 3.0,
 			"tiles/floor_blood.png": 1.0},
+		"wall": {"face": "wall.png", "post": "tiles/wall_post.png", "cap": "tiles/wall_cap.png"},
 		"wall_decals": {"tiles/wall_plaster.png": 4.0, "tiles/wall_mold.png": 3.0,
-			"tiles/wall_ofuda.png": 2.0},
+			"tiles/wall_ofuda.png": 2.0, "tiles/wall_shoji.png": 2.0, "tiles/wall_shoji_torn.png": 2.0},
 		"decor": {"sandals": 2.0, "plate": 2.0, "bones": 3.0, "candle": 3.0,
-			"charms": 2.0, "puddle": 2.0},
+			"charms": 2.0, "puddle": 2.0, "kokeshi": 1.5},
 		"solid": {"pillar": 4.0, "table": 2.0, "screen": 2.0, "lantern": 2.0,
 			"rubble": 3.0},
+	},
+	# Этаж 3: заброшенный храм — каменные плиты, мох, киноварь
+	"temple": {
+		"surface": "stone",
+		"mat": {"atlas": "tiles/temple_atlas.png", "w": 2, "h": 2},
+		"overlays": {"": 84.0, "tiles/floor_moss.png": 5.0, "tiles/floor_crack.png": 4.0,
+			"tiles/floor_leaves.png": 4.0, "tiles/floor_stain.png": 2.0, "tiles/floor_blood.png": 1.0},
+		"wall": {"face": "tiles/wall_temple.png", "post": "tiles/wall_temple_post.png",
+			"cap": "tiles/wall_cap.png"},
+		"wall_decals": {"tiles/wall_temple_ofuda.png": 3.0, "tiles/wall_ema.png": 3.0,
+			"tiles/wall_shimenawa.png": 2.0, "tiles/wall_temple_mold.png": 2.0,
+			"tiles/wall_temple_crack.png": 3.0},
+		"decor": {"candle": 3.0, "charms": 3.0, "bones": 2.0, "sandals": 2.0,
+			"puddle": 2.0, "kokeshi": 1.0},
+		"solid": {"pillar": 3.0, "lantern": 3.0, "jizo": 3.0, "offering_box": 2.0,
+			"rubble": 2.0, "well": 1.0},
+	},
+	# Этаж 4: подвал — сырой камень, бочки, цепи
+	"cellar": {
+		"surface": "stone",
+		"mat": {"atlas": "tiles/cellar_atlas.png", "w": 2, "h": 1},
+		"overlays": {"": 82.0, "tiles/floor_wet.png": 6.0, "tiles/floor_moss.png": 4.0,
+			"tiles/floor_crack.png": 3.0, "tiles/floor_stain.png": 3.0, "tiles/floor_blood.png": 1.5},
+		"wall": {"face": "tiles/wall_cellar.png", "post": "tiles/wall_cellar_post.png",
+			"cap": "tiles/wall_cap_stone.png"},
+		"wall_decals": {"tiles/wall_cellar_ofuda.png": 2.0, "tiles/wall_cellar_mold.png": 3.0,
+			"tiles/wall_cellar_crack.png": 3.0, "tiles/wall_chains.png": 3.0, "tiles/wall_pipe.png": 2.0},
+		"decor": {"bones": 3.0, "puddle": 4.0, "candle": 2.0, "plate": 2.0, "charms": 1.0},
+		"solid": {"barrel": 4.0, "crate": 3.0, "rubble": 3.0, "well": 2.0, "lantern": 1.0},
+	},
+	# Коридор: пустой, одинаковые створки фусума, лампы через равные промежутки
+	"hall": {
+		"surface": "boards",
+		"floor": {"tiles/floor_boards.png": 100.0},
+		"overlays": {"": 97.0, "tiles/floor_crack.png": 1.5, "tiles/floor_stain.png": 1.5},
+		"wall": {"pair": ["tiles/wall_fusuma_a.png", "tiles/wall_fusuma_b.png"],
+			"cap": "tiles/wall_cap.png"},
+		"wall_decals": {},
+		"decor": {},
+		"solid": {},
 	},
 }
 
@@ -73,6 +121,10 @@ const PROPS := {
 	"screen": {"tex": "props/screen.png", "solid": Rect2(1, 8, 46, 20)},
 	"rubble": {"tex": "props/rubble.png", "solid": Rect2(2, 4, 28, 11)},
 	"well": {"tex": "props/well.png", "solid": Rect2(2, 10, 28, 18)},
+	"jizo": {"tex": "props/jizo.png", "solid": Rect2(3, 20, 10, 11)},
+	"offering_box": {"tex": "props/offering_box.png", "solid": Rect2(2, 12, 28, 17)},
+	"barrel": {"tex": "props/barrel.png", "solid": Rect2(2, 14, 12, 15)},
+	"crate": {"tex": "props/crate.png", "solid": Rect2(0, 2, 32, 12)},
 	"lantern": {"tex": "props/lantern.png", "solid": Rect2(3, 18, 10, 13),
 		"light": {"offset": Vector2(8, 12), "radius": 96.0, "tint": Color(1.0, 0.85, 0.6)}},
 }
@@ -98,14 +150,19 @@ func build(layout, data, theme_name := "tatami", floor_num := 1, boss_side := -1
 	_layout = layout
 	_rng.seed = data.seed
 	var special: bool = SPECIAL_KINDS.has(data.kind)
-	if special:
-		theme_name = "plain"
+	if data.kind == "hall":
+		theme_name = "hall"
 	var theme: Dictionary = THEMES.get(theme_name, THEMES["tatami"])
 	_make_reserved(data.doors)
 	_danger = _danger_cells(boss_side)
-	_build_walls()
+	_build_walls(theme)
 	_build_floor(theme)
 	if special:
+		return
+	if data.kind == "hall":
+		_place_hall_lamps()
+		if boss_side >= 0:
+			_place_danger_marks(boss_side)
 		return
 	_place_wall_decals(theme)
 	# Комната примерно вдвое больше прежней, предметов тоже больше
@@ -119,6 +176,8 @@ func build(layout, data, theme_name := "tatami", floor_num := 1, boss_side := -1
 	_place_corner_webs()
 	if boss_side >= 0:
 		_place_danger_marks(boss_side)
+	if data.anomaly != "":
+		_place_anomaly(data.anomaly)
 
 
 # Случайная свободная точка на полу, не ближе min_dist к avoid (для врагов)
@@ -158,21 +217,23 @@ func _make_reserved(doors: Array) -> void:
 
 
 # ---------- Пол ----------
-# Циновки 4x2 тайла, уложены «кирпичной» кладкой: каждый второй ряд сдвинут на пол-циновки
-func _mat_region(gx: int, gy: int) -> Rect2i:
-	var row := floori((gy - RoomLayout.TOP) / 2.0)
-	var ty := posmod(gy - RoomLayout.TOP, 2)
-	var off := posmod(row, 2) * 2
-	var tx := posmod(gx - 1 + off, 4)
-	var mx := floori((gx - 1 + off) / 4.0)
+# Циновки/плиты mw x mh тайлов, уложены «кирпичной» кладкой: каждый второй ряд сдвинут на пол-плиты.
+# Атлас: два варианта плиты, стопкой по вертикали (размер атласа mw*16 x mh*16*2).
+func _mat_region(gx: int, gy: int, mw: int, mh: int) -> Rect2i:
+	var row := floori((gy - RoomLayout.TOP) / float(mh))
+	var ty := posmod(gy - RoomLayout.TOP, mh)
+	var off := posmod(row, 2) * int(mw * 0.5)
+	var tx := posmod(gx - 1 + off, mw)
+	var mx := floori((gx - 1 + off) / float(mw))
 	var variant := posmod(mx * 7 + row * 13, 2)
-	return Rect2i(tx * TILE, (variant * 2 + ty) * TILE, TILE, TILE)
+	return Rect2i(tx * TILE, (variant * mh + ty) * TILE, TILE, TILE)
 
 
 func _build_floor(theme: Dictionary) -> void:
 	var img := Image.create(RoomLayout.COLS * TILE, RoomLayout.ROWS * TILE, false, Image.FORMAT_RGBA8)
-	var use_mats: bool = theme.get("mats", false)
-	var atlas: Image = _image(ART + "tiles/tatami_atlas.png") if use_mats else null
+	var mat: Dictionary = theme.get("mat", {})
+	var use_mats := not mat.is_empty()
+	var atlas: Image = _image(ART + mat["atlas"]) if use_mats else null
 	var rect := Rect2i(0, 0, TILE, TILE)
 	for gy in RoomLayout.ROWS:
 		for gx in RoomLayout.COLS:
@@ -180,7 +241,7 @@ func _build_floor(theme: Dictionary) -> void:
 				continue
 			var dst := Vector2i(gx * TILE, gy * TILE)
 			if use_mats:
-				img.blit_rect(atlas, _mat_region(gx, gy), dst)
+				img.blit_rect(atlas, _mat_region(gx, gy, mat["w"], mat["h"]), dst)
 			else:
 				img.blit_rect(_image(ART + _pick(theme["floor"])), rect, dst)
 			if theme.has("overlays"):
@@ -231,13 +292,19 @@ func _darken_col(img: Image, x: int, y: int, f: float) -> void:
 
 
 # ---------- Стены ----------
-# Одна картинка на все стены: «лицо» (клетка, под которой пол) — штукатурка со столбами
-# через каждые 5 клеток, всё остальное — тёмная крыша (cap). Коллизии даёт room.gd.
-func _build_walls() -> void:
+# Одна картинка на все стены: «лицо» (клетка, под которой пол) — по теме (штукатурка со столбами
+# через каждые 5 клеток или чередующиеся створки фусума), всё остальное — крыша (cap).
+# Коллизии даёт room.gd.
+func _build_walls(theme: Dictionary) -> void:
 	var img := Image.create(RoomLayout.COLS * TILE, RoomLayout.ROWS * TILE, false, Image.FORMAT_RGBA8)
-	var face := _image(ART + "wall.png")
-	var post := _image(ART + "tiles/wall_post.png")
-	var cap := _image(ART + "tiles/wall_cap.png")
+	var w: Dictionary = theme["wall"]
+	var cap := _image(ART + w["cap"])
+	var pair: Array = w.get("pair", [])
+	var face: Image = null
+	var post: Image = null
+	if pair.is_empty():
+		face = _image(ART + w["face"])
+		post = _image(ART + w["post"])
 	var rect := Rect2i(0, 0, TILE, TILE)
 	for gy in RoomLayout.ROWS:
 		for gx in RoomLayout.COLS:
@@ -245,7 +312,10 @@ func _build_walls() -> void:
 				continue
 			var src: Image = cap
 			if _layout.is_floor(gx, gy + 1):
-				src = post if gx % 5 == 0 else face
+				if not pair.is_empty():
+					src = _image(ART + pair[gx % 2])
+				else:
+					src = post if gx % 5 == 0 else face
 			img.blit_rect(src, rect, Vector2i(gx * TILE, gy * TILE))
 	var spr := Sprite2D.new()
 	spr.texture = ImageTexture.create_from_image(img)
@@ -284,22 +354,115 @@ func _place_danger_marks(boss_side: int) -> void:
 
 
 # ---------- Накладки на стены, обращённые к полу снизу ----------
-func _place_wall_decals(theme: Dictionary) -> void:
+func _face_cells() -> Array[Vector2i]:
 	var cands: Array[Vector2i] = []
 	for y in range(0, RoomLayout.ROWS - 1):
 		for x in RoomLayout.COLS:
 			if _layout.wall_mask[y * RoomLayout.COLS + x] == 1 and _layout.is_floor(x, y + 1):
 				cands.append(Vector2i(x, y))
+	return cands
+
+
+func _place_wall_decals(theme: Dictionary) -> void:
+	var cands := _face_cells()
 	_shuffle(cands)
 	var n := mini(_rng.randi_range(7, 11), cands.size())
 	for i in n:
 		if cands[i].x % 5 == 0:
 			continue   # на столбах накладок не бывает
+		var path: String = _pick(theme["wall_decals"])
 		var s := Sprite2D.new()
-		s.texture = _tex(ART + _pick(theme["wall_decals"]))
+		s.texture = _tex(ART + path)
 		s.centered = false
 		s.position = Vector2(cands[i] * TILE)
 		add_child(s)
+		if path.ends_with("wall_shoji.png") or path.ends_with("wall_shoji_torn.png"):
+			_add_moonlight(cands[i], path.ends_with("wall_shoji_torn.png"))
+
+
+# Лунный свет из сёдзи: пятно с решёткой на полу под окном
+func _add_moonlight(cell: Vector2i, torn: bool) -> void:
+	var l := PointLight2D.new()
+	l.set_script(MOON)
+	l.set("torn", torn)
+	l.position = Vector2(cell.x * TILE + 8, (cell.y + 1) * TILE + 30)
+	add_child(l)
+
+
+# Лампы-андон на лице северных стен коридора: пятна света через равные промежутки
+func _place_hall_lamps() -> void:
+	for cell in _face_cells():
+		if cell.x % 8 != 4:
+			continue
+		var s := Sprite2D.new()
+		s.texture = _tex(ART + "tiles/wall_lamp.png")
+		s.centered = false
+		s.position = Vector2(cell * TILE)
+		add_child(s)
+		var l := PointLight2D.new()
+		l.set_script(LIGHT)
+		l.set("light_radius", 80.0)
+		l.set("tint", Color(1.0, 0.78, 0.5))
+		l.position = Vector2(cell.x * TILE + 8, (cell.y + 1) * TILE + 12)
+		add_child(l)
+
+
+# ---------- Аномалии: одна деталь не на месте ----------
+func _place_anomaly(kind: String) -> void:
+	var c := RoomLayout.CENTER
+	match kind:
+		"extra_door":
+			# Лишняя дверь: крошечная, с красным светом из-под неё
+			var faces := _face_cells().filter(func(v): return v.x % 5 != 0)
+			if faces.is_empty():
+				return
+			var cell: Vector2i = faces[_rng.randi_range(0, faces.size() - 1)]
+			var s := Sprite2D.new()
+			s.texture = _tex(ART + "tiles/wall_door_tiny.png")
+			s.centered = false
+			s.position = Vector2(cell * TILE)
+			add_child(s)
+			var l := PointLight2D.new()
+			l.set_script(LIGHT)
+			l.set("light_radius", 34.0)
+			l.set("tint", Color(1.0, 0.3, 0.25))
+			l.position = Vector2(cell.x * TILE + 8, (cell.y + 1) * TILE + 6)
+			add_child(l)
+		"stare_kokeshi":
+			# Шесть кукол стоят кругом спиной, а когда подходишь — все смотрят на тебя
+			for i in 6:
+				var k = KOKESHI.new()
+				k.set("stare_only", true)
+				k.position = c + Vector2.from_angle(TAU * i / 6.0 + 0.3) * 82.0
+				add_child(k)
+		"blue_candles":
+			# Круг синих свечей вокруг тёмной лужи
+			for i in 8:
+				var p := c + Vector2.from_angle(TAU * i / 8.0) * 58.0
+				var s := Sprite2D.new()
+				s.texture = _tex(ART + "props/candle_blue.png")
+				s.position = p
+				add_child(s)
+				var l := PointLight2D.new()
+				l.set_script(LIGHT)
+				l.set("light_radius", 44.0)
+				l.set("tint", Color(0.45, 0.65, 1.0))
+				l.position = p + Vector2(0, -4)
+				add_child(l)
+			var pud := Sprite2D.new()
+			pud.texture = _tex(ART + "props/puddle.png")
+			pud.position = c
+			add_child(pud)
+		"handprints":
+			# Отпечатки ладоней на стене, как будто кто-то полз вверх
+			var cands := _face_cells().filter(func(v): return v.x % 5 != 0)
+			_shuffle(cands)
+			for i in mini(4, cands.size()):
+				var s := Sprite2D.new()
+				s.texture = _tex(ART + "tiles/wall_handprints.png")
+				s.centered = false
+				s.position = Vector2(cands[i] * TILE)
+				add_child(s)
 
 
 # ---------- Препятствия ----------
@@ -372,12 +535,17 @@ func _place_decor(theme: Dictionary, count: int) -> void:
 		var rect := Rect2(pos, Vector2(TILE, TILE))
 		if _hits_any(rect, _keep_clear) or _hits_any(rect, taken):
 			continue
-		var s := Sprite2D.new()
-		s.texture = _tex(ART + def["tex"])
-		s.centered = false
-		s.position = pos
-		add_child(s)
-		_add_light(s, id)
+		if id == "kokeshi":
+			var k = KOKESHI.new()   # кукла сама следит за взглядом игрока и умеет оживать
+			k.position = pos + Vector2(8, 8)
+			add_child(k)
+		else:
+			var s := Sprite2D.new()
+			s.texture = _tex(ART + def["tex"])
+			s.centered = false
+			s.position = pos
+			add_child(s)
+			_add_light(s, id)
 		taken.append(rect)
 		placed += 1
 

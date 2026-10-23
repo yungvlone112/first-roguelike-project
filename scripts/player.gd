@@ -19,6 +19,7 @@ var swap_ready := true
 var weapon := "katana"
 var invincible := false
 var dead := false
+var step_timer := 0.0
 
 @onready var hitbox: Area2D = $Hitbox
 @onready var slash: ColorRect = $Hitbox/Slash
@@ -43,6 +44,13 @@ func _physics_process(_delta):
 			$Sprite2D.flip_h = dir.x < 0
 	velocity = dir * speed
 	move_and_slide()
+	if dir != Vector2.ZERO:
+		step_timer -= _delta
+		if step_timer <= 0.0:
+			step_timer = 0.3
+			Sfx.step()
+	else:
+		step_timer = 0.05
 	var spr = get_node_or_null("Sprite2D")
 	if spr:
 		if dir != Vector2.ZERO:
