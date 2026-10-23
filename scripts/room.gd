@@ -25,9 +25,11 @@ const TINTS := {
 	"story": Color(1.1, 0.85, 1.3),
 }
 
-const TRIGGER_RECT := Rect2(90, 58, 300, 156)   # игрок вошёл сюда: начинается бой
-const SCREEN := Rect2(0, 0, 480, 270)
 const LEAVE_COOLDOWN := 0.8
+
+# Игрок вошёл в эту зону (центр комнаты ± 250x120): начинается бой
+var trigger_rect := Rect2(RoomLayout.CENTER - Vector2(250, 120), Vector2(500, 240))
+var bounds := Rect2(Vector2.ZERO, RoomLayout.SIZE)   # вся комната целиком
 
 var data                      # FloorGen.RoomData
 var entry_side := -1          # через какую дверь вошли (-1: старт этажа)
@@ -84,6 +86,7 @@ func _build_walls() -> void:
 		w.size = Vector2(r.size * RoomLayout.TILE)
 		w.position = Vector2(r.position * RoomLayout.TILE)
 		add_child(w)
+		w.get_node("Visual").visible = false   # картинку стен рисует RoomDressing
 
 
 func _build_doors() -> void:
@@ -143,7 +146,7 @@ func _spawn_enemies(spawn: Vector2) -> void:
 	if data.kind == "boss":
 		var b = BOSS.instantiate()
 		b.max_hp = boss_hp
-		b.position = Vector2(240, 136)
+		b.position = RoomLayout.CENTER
 		enemies.add_child(b)
 		return
 	for i in data.enemy_count:
@@ -179,7 +182,7 @@ func _physics_process(delta):
 			descend.emit()
 			return
 	# 3. Начало боя
-	if not started and TRIGGER_RECT.has_point(p):
+	if not started and trigger_rect.has_point(p):
 		_start_combat()
 	# 4. Страховки
 	_keep_player_inside(p)
@@ -201,7 +204,7 @@ func _exit_rect(side: int) -> Rect2:
 
 
 func _keep_player_inside(p: Vector2) -> void:
-	if not SCREEN.has_point(p):
+	if not bounds.has_point(p):
 		push_warning("Игрок оказался за пределами комнаты без двери, возвращаю")
 		player.global_position = RoomLayout.spawn_point(entry_side)
 		return
@@ -224,7 +227,7 @@ func _keep_enemies_inside() -> void:
 
 # Переставляет застрявшего или вылетевшего за пределы врага в свободную точку (вызывают и сами враги)
 func unstick(e: Node2D) -> void:
-	var avoid := Vector2(240, 136)
+	var avoid := RoomLayout.CENTER
 	if player != null and is_instance_valid(player):
 		avoid = player.global_position
 	e.global_position = dressing.random_enemy_point(avoid, 90.0)
@@ -275,11 +278,11 @@ func _on_enemy_died(id: int) -> void:
 func drop_rewards() -> void:
 	if data.kind == "boss":
 		Meta.add_souls(10)
-		spawn_pickup("heal", Vector2(196, 136))
-		spawn_pickup(["damage", "speed", "maxhp"].pick_random(), Vector2(284, 136))
+		spawn_pickup("heal", RoomLayout.CENTER + Vector2(-44, 0))
+		spawn_pickup(["damage", "speed", "maxhp"].pick_random(), RoomLayout.CENTER + Vector2(44, 0))
 		_spawn_portal(true)
 	elif randf() < 0.3:
-		spawn_pickup("heal", Vector2(240, 136))
+		spawn_pickup("heal", RoomLayout.CENTER)
 
 
 func spawn_pickup(kind, pos) -> void:
@@ -294,7 +297,7 @@ func _spawn_portal(delayed: bool) -> void:
 	if portal_ready_ms >= 0:
 		return   # портал уже есть
 	var holder := Node2D.new()
-	holder.position = Vector2(240, 120)
+	holder.position = RoomLayout.CENTER + Vector2(0, -16)
 	add_child(holder)
 	var spr := Sprite2D.new()
 	spr.texture = PORTAL_TEX

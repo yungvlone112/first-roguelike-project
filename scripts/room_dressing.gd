@@ -7,19 +7,23 @@ const RoomLayout = preload("res://scripts/room_layout.gd")
 const LIGHT = preload("res://scripts/light.gd")
 
 const TILE := 16
-const OBSTACLE_GAP := 16.0   # минимальный просвет между препятствиями
+const OBSTACLE_GAP := 24.0   # минимальный просвет между препятствиями (герой 16 px в ширину)
 const ART := "res://art/"
 
 # --- Темы: какие тайлы и предметы встречаются (число = вес) ---
+# mats: пол из циновок татами (атлас tiles/tatami_atlas.png: 4x2 тайла на циновку, 2 варианта)
+# floor: запасной вариант — случайные тайлы целиком (если mats нет)
+# overlays: прозрачные накладки поверх пола ("" = без накладки)
 const THEMES := {
 	"tatami": {
-		"floor": {
-			"floor.png": 70.0,
-			"tiles/floor_scratch.png": 8.0,
-			"tiles/floor_crack.png": 8.0,
-			"tiles/floor_stain.png": 6.0,
-			"tiles/floor_mold.png": 4.0,
-			"tiles/floor_blood.png": 1.5,
+		"mats": true,
+		"overlays": {
+			"": 88.0,
+			"tiles/floor_scratch.png": 3.5,
+			"tiles/floor_crack.png": 3.5,
+			"tiles/floor_stain.png": 2.5,
+			"tiles/floor_mold.png": 1.5,
+			"tiles/floor_blood.png": 0.8,
 		},
 		"wall_decals": {
 			"tiles/wall_plaster.png": 4.0,
@@ -33,11 +37,13 @@ const THEMES := {
 		"solid": {"pillar": 3.0, "table": 3.0, "screen": 3.0, "lantern": 2.0,
 			"rubble": 2.0, "well": 1.0},
 	},
-	# Заготовки особых комнат: только обычный пол, без декора и препятствий
-	"plain": {"floor": {"floor.png": 100.0}},
+	# Заготовки особых комнат: только пол-татами, без декора и препятствий
+	"plain": {"mats": true},
 	# Пример второй темы для других этажей
 	"boards": {
 		"floor": {"tiles/floor_boards.png": 100.0},
+		"overlays": {"": 90.0, "tiles/floor_crack.png": 4.0, "tiles/floor_stain.png": 3.0,
+			"tiles/floor_blood.png": 1.0},
 		"wall_decals": {"tiles/wall_plaster.png": 4.0, "tiles/wall_mold.png": 3.0,
 			"tiles/wall_ofuda.png": 2.0},
 		"decor": {"sandals": 2.0, "plate": 2.0, "bones": 3.0, "candle": 3.0,
@@ -59,15 +65,16 @@ const PROPS := {
 	"puddle": {"tex": "props/puddle.png", "place": "any"},
 	"kokeshi": {"tex": "props/kokeshi.png", "place": "wall"},
 	"candle": {"tex": "props/candle.png", "place": "any",
-		"light": {"offset": Vector2(8, 6), "radius": 48.0, "tint": Color(1.0, 0.8, 0.55)}},
+		"light": {"offset": Vector2(8, 4), "radius": 52.0, "tint": Color(1.0, 0.8, 0.55)}},
 	"cobweb": {"tex": "props/cobweb.png", "place": "any"},
-	"pillar": {"tex": "props/pillar.png", "solid": Rect2(3, 0, 10, 16)},
-	"table": {"tex": "props/table.png", "solid": Rect2(2, 5, 28, 9)},
-	"screen": {"tex": "props/screen.png", "solid": Rect2(2, 2, 28, 13)},
-	"rubble": {"tex": "props/rubble.png", "solid": Rect2(2, 5, 12, 9)},
-	"well": {"tex": "props/well.png", "solid": Rect2(1, 4, 14, 11)},
-	"lantern": {"tex": "props/lantern.png", "solid": Rect2(4, 6, 8, 10),
-		"light": {"offset": Vector2(8, 8), "radius": 90.0, "tint": Color(1.0, 0.85, 0.6)}},
+	# Крупные предметы (размер кратен 16 px): спрайт 16x32, коллизия только у основания
+	"pillar": {"tex": "props/pillar.png", "solid": Rect2(2, 20, 12, 11)},
+	"table": {"tex": "props/table.png", "solid": Rect2(5, 7, 38, 19)},
+	"screen": {"tex": "props/screen.png", "solid": Rect2(1, 8, 46, 20)},
+	"rubble": {"tex": "props/rubble.png", "solid": Rect2(2, 4, 28, 11)},
+	"well": {"tex": "props/well.png", "solid": Rect2(2, 10, 28, 18)},
+	"lantern": {"tex": "props/lantern.png", "solid": Rect2(3, 18, 10, 13),
+		"light": {"offset": Vector2(8, 12), "radius": 96.0, "tint": Color(1.0, 0.85, 0.6)}},
 }
 
 const SPECIAL_KINDS := ["shop", "chest", "story"]
@@ -96,17 +103,19 @@ func build(layout, data, theme_name := "tatami", floor_num := 1, boss_side := -1
 	var theme: Dictionary = THEMES.get(theme_name, THEMES["tatami"])
 	_make_reserved(data.doors)
 	_danger = _danger_cells(boss_side)
+	_build_walls()
 	_build_floor(theme)
 	if special:
 		return
 	_place_wall_decals(theme)
-	var count := _rng.randi_range(2, 3 + mini(floor_num, 3))
+	# Комната примерно вдвое больше прежней, предметов тоже больше
+	var count := _rng.randi_range(4, 6 + mini(floor_num, 3))
 	if data.kind == "boss":
-		count = _rng.randi_range(0, 2)
+		count = _rng.randi_range(1, 3)
 	elif data.kind == "start":
-		count = _rng.randi_range(1, 2)
+		count = _rng.randi_range(2, 4)
 	_place_obstacles(theme, count)
-	_place_decor(theme, _rng.randi_range(6, 10))
+	_place_decor(theme, _rng.randi_range(14, 22))
 	_place_corner_webs()
 	if boss_side >= 0:
 		_place_danger_marks(boss_side)
@@ -125,21 +134,23 @@ func random_enemy_point(avoid: Vector2, min_dist := 110.0) -> Vector2:
 		if _hits_any(Rect2(p - Vector2(10, 10), Vector2(20, 20)), blocked):
 			continue
 		return p
-	return Vector2(240, 136)
+	return RoomLayout.CENTER
 
 
 # ---------- Резервы: гарантированный проход от каждой двери к центру ----------
 func _make_reserved(doors: Array) -> void:
-	_reserved = [Rect2(200, 104, 80, 64)]
-	_keep_clear = [Rect2(208, 112, 64, 48)]
+	var c := RoomLayout.CENTER
+	var sz := RoomLayout.SIZE
+	_reserved = [Rect2(c.x - 56, c.y - 40, 112, 80)]
+	_keep_clear = [Rect2(c.x - 60, c.y - 32, 120, 64)]
 	if doors[0]:
-		_reserved.append(Rect2(208, 0, 64, 136))
+		_reserved.append(Rect2(c.x - 32, 0, 64, c.y))
 	if doors[1]:
-		_reserved.append(Rect2(240, 112, 240, 48))
+		_reserved.append(Rect2(c.x, c.y - 32, sz.x - c.x, 64))
 	if doors[2]:
-		_reserved.append(Rect2(208, 136, 64, 136))
+		_reserved.append(Rect2(c.x - 32, c.y, 64, sz.y - c.y))
 	if doors[3]:
-		_reserved.append(Rect2(0, 112, 240, 48))
+		_reserved.append(Rect2(0, c.y - 32, c.x, 64))
 	for side in 4:
 		if doors[side]:
 			var s: Vector2 = RoomLayout.SPAWNS[side]
@@ -147,18 +158,39 @@ func _make_reserved(doors: Array) -> void:
 
 
 # ---------- Пол ----------
+# Циновки 4x2 тайла, уложены «кирпичной» кладкой: каждый второй ряд сдвинут на пол-циновки
+func _mat_region(gx: int, gy: int) -> Rect2i:
+	var row := floori((gy - RoomLayout.TOP) / 2.0)
+	var ty := posmod(gy - RoomLayout.TOP, 2)
+	var off := posmod(row, 2) * 2
+	var tx := posmod(gx - 1 + off, 4)
+	var mx := floori((gx - 1 + off) / 4.0)
+	var variant := posmod(mx * 7 + row * 13, 2)
+	return Rect2i(tx * TILE, (variant * 2 + ty) * TILE, TILE, TILE)
+
+
 func _build_floor(theme: Dictionary) -> void:
 	var img := Image.create(RoomLayout.COLS * TILE, RoomLayout.ROWS * TILE, false, Image.FORMAT_RGBA8)
+	var use_mats: bool = theme.get("mats", false)
+	var atlas: Image = _image(ART + "tiles/tatami_atlas.png") if use_mats else null
+	var rect := Rect2i(0, 0, TILE, TILE)
 	for gy in RoomLayout.ROWS:
 		for gx in RoomLayout.COLS:
 			if not _layout.is_floor(gx, gy):
 				continue
-			var path: String = ART + _pick(theme["floor"])
+			var dst := Vector2i(gx * TILE, gy * TILE)
+			if use_mats:
+				img.blit_rect(atlas, _mat_region(gx, gy), dst)
+			else:
+				img.blit_rect(_image(ART + _pick(theme["floor"])), rect, dst)
+			if theme.has("overlays"):
+				var ov: String = _pick(theme["overlays"])
+				if ov != "":
+					img.blend_rect(_image(ART + ov), rect, dst)
 			var key := Vector2i(gx, gy)
 			if _danger.has(key) and _rng.randf() < DANGER_CHANCE[_danger[key]]:
-				path = ART + "tiles/floor_danger.png"
-			var src := _image(path)
-			img.blit_rect(src, Rect2i(0, 0, TILE, TILE), Vector2i(gx * TILE, gy * TILE))
+				img.blend_rect(_image(ART + "tiles/floor_danger.png"), rect, dst)
+	_bake_shadows(img)
 	var spr := Sprite2D.new()
 	spr.texture = ImageTexture.create_from_image(img)
 	spr.centered = false
@@ -167,12 +199,67 @@ func _build_floor(theme: Dictionary) -> void:
 	floor_sprite = spr
 
 
+# Тень от стен прямо в картинке пола: сверху сильнее (стена высокая), по бокам слабее
+func _bake_shadows(img: Image) -> void:
+	for gy in RoomLayout.ROWS:
+		for gx in RoomLayout.COLS:
+			if not _layout.is_floor(gx, gy):
+				continue
+			var ox := gx * TILE
+			var oy := gy * TILE
+			if gy > 0 and not _layout.is_floor(gx, gy - 1):
+				for k in 8:
+					_darken_row(img, ox, oy + k, 0.45 + 0.55 * k / 8.0)
+			if gx > 0 and not _layout.is_floor(gx - 1, gy):
+				for k in 4:
+					_darken_col(img, ox + k, oy, 0.7 + 0.3 * k / 4.0)
+			if gx < RoomLayout.COLS - 1 and not _layout.is_floor(gx + 1, gy):
+				for k in 4:
+					_darken_col(img, ox + TILE - 1 - k, oy, 0.7 + 0.3 * k / 4.0)
+
+
+func _darken_row(img: Image, x: int, y: int, f: float) -> void:
+	for i in TILE:
+		var c := img.get_pixel(x + i, y)
+		img.set_pixel(x + i, y, Color(c.r * f, c.g * f, c.b * f, c.a))
+
+
+func _darken_col(img: Image, x: int, y: int, f: float) -> void:
+	for i in TILE:
+		var c := img.get_pixel(x, y + i)
+		img.set_pixel(x, y + i, Color(c.r * f, c.g * f, c.b * f, c.a))
+
+
+# ---------- Стены ----------
+# Одна картинка на все стены: «лицо» (клетка, под которой пол) — штукатурка со столбами
+# через каждые 5 клеток, всё остальное — тёмная крыша (cap). Коллизии даёт room.gd.
+func _build_walls() -> void:
+	var img := Image.create(RoomLayout.COLS * TILE, RoomLayout.ROWS * TILE, false, Image.FORMAT_RGBA8)
+	var face := _image(ART + "wall.png")
+	var post := _image(ART + "tiles/wall_post.png")
+	var cap := _image(ART + "tiles/wall_cap.png")
+	var rect := Rect2i(0, 0, TILE, TILE)
+	for gy in RoomLayout.ROWS:
+		for gx in RoomLayout.COLS:
+			if _layout.wall_mask[gy * RoomLayout.COLS + gx] == 0:
+				continue
+			var src: Image = cap
+			if _layout.is_floor(gx, gy + 1):
+				src = post if gx % 5 == 0 else face
+			img.blit_rect(src, rect, Vector2i(gx * TILE, gy * TILE))
+	var spr := Sprite2D.new()
+	spr.texture = ImageTexture.create_from_image(img)
+	spr.centered = false
+	spr.z_index = -1
+	add_child(spr)
+
+
 # ---------- Опасность: дорожка к двери босса и черепа по бокам ----------
 func _danger_cells(boss_side: int) -> Dictionary:
 	var out := {}
 	if boss_side < 0:
 		return out
-	var r: Rect2i = RoomLayout.DOOR_CELLS[boss_side]
+	var r: Rect2i = RoomLayout.door_edge(boss_side)
 	var d: Vector2i = RoomLayout.DIR[boss_side]
 	for k in DANGER_CHANCE.size():
 		for y in range(r.position.y, r.end.y):
@@ -182,7 +269,7 @@ func _danger_cells(boss_side: int) -> Dictionary:
 
 
 func _place_danger_marks(boss_side: int) -> void:
-	var r: Rect2i = RoomLayout.DOOR_CELLS[boss_side]
+	var r: Rect2i = RoomLayout.door_edge(boss_side)
 	var flank: Array[Vector2i] = []
 	if boss_side == 0 or boss_side == 2:   # горизонтальная дверь: стены слева и справа
 		flank = [Vector2i(r.position.x - 1, r.position.y), Vector2i(r.end.x, r.position.y)]
@@ -204,8 +291,10 @@ func _place_wall_decals(theme: Dictionary) -> void:
 			if _layout.wall_mask[y * RoomLayout.COLS + x] == 1 and _layout.is_floor(x, y + 1):
 				cands.append(Vector2i(x, y))
 	_shuffle(cands)
-	var n := mini(_rng.randi_range(3, 5), cands.size())
+	var n := mini(_rng.randi_range(7, 11), cands.size())
 	for i in n:
+		if cands[i].x % 5 == 0:
+			continue   # на столбах накладок не бывает
 		var s := Sprite2D.new()
 		s.texture = _tex(ART + _pick(theme["wall_decals"]))
 		s.centered = false
@@ -217,7 +306,7 @@ func _place_wall_decals(theme: Dictionary) -> void:
 func _place_obstacles(theme: Dictionary, count: int) -> void:
 	var placed := 0
 	var tries := 0
-	while placed < count and tries < 100:
+	while placed < count and tries < 200:
 		tries += 1
 		var id := _pick(theme["solid"])
 		var def: Dictionary = PROPS[id]
@@ -269,7 +358,7 @@ func _spawn_solid(id: String, pos: Vector2, tex: Texture2D, solid: Rect2) -> voi
 func _place_decor(theme: Dictionary, count: int) -> void:
 	var placed := 0
 	var tries := 0
-	while placed < count and tries < 150:
+	while placed < count and tries < 300:
 		tries += 1
 		var id := _pick(theme["decor"])
 		var def: Dictionary = PROPS[id]
@@ -296,7 +385,7 @@ func _place_decor(theme: Dictionary, count: int) -> void:
 # Паутина в углах, где сходятся две стены (в том числе во внутренних углах Г-комнат)
 func _place_corner_webs() -> void:
 	var cands: Array[Vector3i] = []   # x, y, flip
-	for y in range(1, RoomLayout.ROWS - 1):
+	for y in range(RoomLayout.TOP, RoomLayout.ROWS - 1):
 		for x in range(1, RoomLayout.COLS - 1):
 			if not _layout.is_floor(x, y) or _layout.is_floor(x, y - 1):
 				continue
@@ -307,7 +396,7 @@ func _place_corner_webs() -> void:
 			elif e_wall:
 				cands.append(Vector3i(x, y, 1))
 	_shuffle(cands)
-	for i in mini(3, cands.size()):
+	for i in mini(5, cands.size()):
 		if _rng.randf() < 0.6:
 			var s := Sprite2D.new()
 			s.texture = _tex(ART + PROPS["cobweb"]["tex"])

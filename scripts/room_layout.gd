@@ -1,15 +1,21 @@
 extends RefCounted
-## Маска комнаты на сетке 30x17 тайлов (по 16 px): где пол, где стены, где двери.
+## Маска комнаты на сетке 48x27 тайлов (по 16 px = 768x432): где пол, где стены, где двери.
+## Камера следует за игроком (лимиты в player.tscn), комната больше одного экрана 480x270.
+## Северная стена двухрядная (крыша + «лицо»), поэтому пол начинается с ряда TOP.
 
-const COLS := 30
-const ROWS := 17
+const COLS := 48
+const ROWS := 27
 const TILE := 16
+const TOP := 2                       # первый ряд пола (ряды 0..1 — северная стена)
+const SIZE := Vector2(768, 432)      # COLS * TILE, ROWS * TILE
+const CENTER := Vector2(384, 224)    # середина пола: босс, награды, портал
 
 const DIR := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]  # N E S W
 # Клетки дверных проёмов (в кольце стен) по сторонам N E S W
-const DOOR_CELLS := [Rect2i(13, 0, 4, 1), Rect2i(29, 7, 1, 3), Rect2i(13, 16, 4, 1), Rect2i(0, 7, 1, 3)]
+# (северная дверь занимает оба ряда стены)
+const DOOR_CELLS := [Rect2i(22, 0, 4, 2), Rect2i(47, 12, 1, 4), Rect2i(22, 26, 4, 1), Rect2i(0, 12, 1, 4)]
 # Куда ставим игрока, вошедшего через дверь этой стороны
-const SPAWNS := [Vector2(240, 40), Vector2(440, 136), Vector2(240, 232), Vector2(40, 136)]
+const SPAWNS := [Vector2(384, 64), Vector2(728, 224), Vector2(384, 380), Vector2(40, 224)]
 
 var floor_mask := PackedByteArray()
 var wall_mask := PackedByteArray()
@@ -21,8 +27,8 @@ func _init(data):
 	wall_mask.resize(COLS * ROWS)
 	floor_mask.fill(0)
 	wall_mask.fill(0)
-	# Внутренность комнаты: колонки 1..28, строки 1..15
-	for y in range(1, ROWS - 1):
+	# Внутренность комнаты: колонки 1..COLS-2, строки TOP..ROWS-2
+	for y in range(TOP, ROWS - 1):
 		for x in range(1, COLS - 1):
 			floor_mask[y * COLS + x] = 1
 	# Вырезы углов
@@ -50,6 +56,15 @@ func _init(data):
 						near = true
 			if near:
 				wall_mask[y * COLS + x] = 1
+	# Над «лицом» стены (клетка, под которой пол) добавляем ряд крыши: стена двухрядная
+	var roof: Array[int] = []
+	for y in range(1, ROWS):
+		for x in COLS:
+			if wall_mask[y * COLS + x] == 1 and is_floor(x, y + 1) \
+					and wall_mask[(y - 1) * COLS + x] == 0 and not is_floor(x, y - 1):
+				roof.append((y - 1) * COLS + x)
+	for i in roof:
+		wall_mask[i] = 1
 
 
 func is_floor(x: int, y: int) -> bool:
@@ -60,8 +75,16 @@ func is_floor(x: int, y: int) -> bool:
 
 static func spawn_point(side: int) -> Vector2:
 	if side < 0:
-		return Vector2(240, 136)
+		return CENTER
 	return SPAWNS[side]
+
+
+# Клетки двери, ближайшие к комнате (у северной двери это нижний из двух рядов)
+static func door_edge(side: int) -> Rect2i:
+	var r: Rect2i = DOOR_CELLS[side]
+	if side == 0:
+		return Rect2i(r.position.x, r.end.y - 1, r.size.x, 1)
+	return r
 
 
 func door_rect(side: int) -> Rect2:

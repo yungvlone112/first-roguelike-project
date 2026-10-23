@@ -83,6 +83,9 @@ func enter_room(c: Vector2i, entry_side: int):
 			current.boss_side = side
 	player.global_position = RoomLayout.spawn_point(entry_side)
 	player.velocity = Vector2.ZERO
+	var cam: Camera2D = player.get_node("Camera2D")
+	cam.force_update_scroll()
+	cam.reset_smoothing()   # при входе в комнату камера сразу на игроке, без наезда
 	add_child(current)
 	move_child(current, 0)
 	current.exited.connect(_on_room_exited)

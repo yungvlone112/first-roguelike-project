@@ -6,6 +6,7 @@ extends Node2D
 ## он будет вызван (room — узел комнаты, data — её RoomData, data.state хранит состояние).
 
 const KINDS := ["shop", "chest", "story"]
+const RoomLayout = preload("res://scripts/room_layout.gd")
 const CUSTOM_DIR := "res://scenes/rooms/"
 
 const CHEST_TEX = preload("res://art/props/chest.png")
@@ -48,7 +49,7 @@ func setup(room_node, room_data) -> void:
 
 # ---------- Сундук ----------
 func _chest() -> void:
-	var pos := Vector2(240, 136)
+	var pos := RoomLayout.CENTER
 	var opened: bool = data.state.get("opened", false)
 	var spr := _sprite(CHEST_OPEN_TEX if opened else CHEST_TEX, pos)
 	_solid(pos + Vector2(0, 2), Vector2(12, 8))
@@ -65,8 +66,8 @@ func _open_chest(body, spr: Sprite2D, area: Area2D) -> void:
 	spr.texture = CHEST_OPEN_TEX
 	area.set_deferred("monitoring", false)
 	Sfx.play("pickup")
-	room.spawn_pickup.call_deferred("heal", Vector2(224, 164))
-	room.spawn_pickup.call_deferred(["damage", "speed", "maxhp"].pick_random(), Vector2(256, 164))
+	room.spawn_pickup.call_deferred("heal", RoomLayout.CENTER + Vector2(-16, 28))
+	room.spawn_pickup.call_deferred(["damage", "speed", "maxhp"].pick_random(), RoomLayout.CENTER + Vector2(16, 28))
 
 
 # ---------- Магазин ----------
@@ -85,10 +86,11 @@ func _shop() -> void:
 	for s in 4:
 		if data.doors[s]:
 			door_side = s
-	var row_y := 200.0 if door_side == 0 else 72.0   # подальше от прохода от двери
+	var c := RoomLayout.CENTER
+	var row_y := c.y + 64.0 if door_side == 0 else c.y - 64.0   # подальше от прохода от двери
 	for i in 3:
 		var kind: String = kinds[i]
-		var pos := Vector2(200.0 + 40.0 * i, row_y)
+		var pos := Vector2(c.x - 40.0 + 40.0 * i, row_y)
 		_sprite(PEDESTAL_TEX, pos)
 		var item := ColorRect.new()
 		item.color = ITEMS[kind]["color"]
@@ -102,7 +104,7 @@ func _shop() -> void:
 		else:
 			var area := _trigger(pos, Vector2(20, 20))
 			area.body_entered.connect(_buy.bind(i, kind, item, lbl))
-	_label("Магазин", Vector2(240, 30))
+	_label("Магазин", Vector2(c.x, 44))
 
 
 # Заготовка: покупка происходит при касании пьедестала
@@ -125,7 +127,7 @@ func _buy(body, idx: int, kind: String, item: ColorRect, lbl: Label) -> void:
 
 # ---------- Сюжетная комната ----------
 func _story() -> void:
-	var pos := Vector2(240, 136)
+	var pos := RoomLayout.CENTER
 	_sprite(ALTAR_TEX, pos)
 	_solid(pos + Vector2(0, 2), Vector2(14, 10))
 	_label("Сюжет", pos + Vector2(0, 16))

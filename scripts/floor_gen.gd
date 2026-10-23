@@ -101,7 +101,7 @@ static func _try_generate(floor_num: int, rng: RandomNumberGenerator, with_speci
 	for c in rooms:
 		var r = rooms[c]
 		if r.kind == "normal":
-			r.enemy_count = rng.randi_range(2, 3 + floor_num)
+			r.enemy_count = rng.randi_range(3, 4 + floor_num)   # комната больше — врагов чуть больше
 		_assign_shape(r, rng)
 	return rooms
 
@@ -253,13 +253,21 @@ static func _corner_cut(corner: int, r, rng: RandomNumberGenerator) -> Rect2i:
 	return _cut_rect(corner, w, h)
 
 
+# Размеры вырезов заданы для прежней комнаты 30x17; под текущую сетку масштабируем
+const CUT_SCALE := 1.5
+
 static func _cut_rect(corner: int, w: int, h: int) -> Rect2i:
+	w = roundi(w * CUT_SCALE)
+	h = roundi(h * CUT_SCALE)
+	var x1 := RoomLayout.COLS - 1   # правая граница пола (не включая)
+	var y0 := RoomLayout.TOP        # первый ряд пола
+	var y1 := RoomLayout.ROWS - 1
 	match corner:
 		0:
-			return Rect2i(1, 1, w, h)
+			return Rect2i(1, y0, w, h)
 		1:
-			return Rect2i(29 - w, 1, w, h)
+			return Rect2i(x1 - w, y0, w, h)
 		2:
-			return Rect2i(1, 16 - h, w, h)
+			return Rect2i(1, y1 - h, w, h)
 		_:
-			return Rect2i(29 - w, 16 - h, w, h)
+			return Rect2i(x1 - w, y1 - h, w, h)
